@@ -1,0 +1,10 @@
+#! /bin/sh
+#
+# Created by configure
+
+'./configure' \
+'--with-sdl3' \
+'--with-sdl3-gfx' \
+'--with-sdl3-image' \
+'--with-sdl3-ttf' \
+"$@"
