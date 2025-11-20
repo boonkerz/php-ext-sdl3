@@ -2,10 +2,6 @@ PHP_ARG_WITH(sdl3, [for sdl3 support], [
 AS_HELP_STRING([--with-sdl3[=DIR]], [Enable sdl3 support. DIR is the prefix for SDL3 installation.])
 ])
 
-PHP_ARG_WITH(sdl3_gfx, [for sdl3_gfx support], [
-AS_HELP_STRING([--with-sdl3-gfx[=DIR]], [Enable sdl3_gfx support. DIR is the prefix for SDL3_gfx installation.])
-])
-
 PHP_ARG_WITH(sdl3_image, [for sdl3_image support], [
 AS_HELP_STRING([--with-sdl3-image[=DIR]], [Enable sdl3_image support. DIR is the prefix for SDL3_image installation.])
 ])
@@ -34,29 +30,6 @@ if test "$PHP_SDL3" != "no"; then
   else
     AC_MSG_RESULT([not found, using shared SDL3 libs])
     LDFLAGS="$LDFLAGS $SDL3_LIBS"
-  fi
-
-  if test "$PHP_SDL3_GFX" != "no"; then
-    if test -d "$PHP_SDL3_GFX"; then
-        PKG_CONFIG_PATH="$PHP_SDL3_GFX/lib/pkgconfig:$PHP_SDL3_GFX/share/pkgconfig:$PKG_CONFIG_PATH"
-    fi
-
-    PKG_CHECK_MODULES([SDL3_GFX], [sdl3-gfx >= 1.0.0], [
-      CFLAGS="$CFLAGS $SDL3_GFX_CFLAGS"
-    ],[
-      AC_MSG_ERROR([SDL3_gfx not found. Please check your installation or use --with-sdl3-gfx=/path/to/sdl3_gfx])
-    ])
-
-    dnl Prefer static SDL3_gfx libs if available
-    AC_MSG_CHECKING([for static SDL3_gfx libs])
-    SDL3_GFX_STATIC_LIBS=`$PKG_CONFIG --libs --static sdl3-gfx 2>/dev/null`
-    if test "x$SDL3_GFX_STATIC_LIBS" != "x"; then
-      AC_MSG_RESULT([$SDL3_GFX_STATIC_LIBS])
-      LDFLAGS="$LDFLAGS $SDL3_GFX_STATIC_LIBS"
-    else
-      AC_MSG_RESULT([not found, using shared SDL3_gfx libs])
-      LDFLAGS="$LDFLAGS $SDL3_GFX_LIBS"
-    fi
   fi
 
   if test "$PHP_SDL3_IMAGE" != "no"; then
@@ -104,6 +77,15 @@ if test "$PHP_SDL3" != "no"; then
       LDFLAGS="$LDFLAGS $SDL3_TTF_LIBS"
     fi
   fi
+
+  dnl Optional libnotify support for desktop notifications
+  PKG_CHECK_MODULES([LIBNOTIFY], [libnotify], [
+    AC_DEFINE([HAVE_LIBNOTIFY], [1], [Enable libnotify for desktop_notify()])
+    CFLAGS="$CFLAGS $LIBNOTIFY_CFLAGS"
+    LDFLAGS="$LDFLAGS $LIBNOTIFY_LIBS"
+  ], [
+    AC_MSG_WARN([libnotify not found via pkg-config, desktop_notify() will be disabled])
+  ])
 
   SDL_SOURCE_FILES="sdl3.c helper.c sdl3_image.c sdl3_ttf.c sdl3_events.c"
 

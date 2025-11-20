@@ -10,8 +10,11 @@
 #include "sdl3_ttf.h"
 #include "sdl3_events.h"
 #include <SDL3/SDL.h>
-#include <SDL3_gfx/SDL3_gfxPrimitives.h>
 #include <math.h>
+
+#ifdef HAVE_LIBNOTIFY
+#include <libnotify/notify.h>
+#endif
 
 // Resource handles (nicht static, damit sie in anderen Modulen verfügbar sind)
 int le_sdl_window;
@@ -526,6 +529,68 @@ PHP_FUNCTION(sdl_set_texture_alpha_mod) {
     RETURN_TRUE;
 }
 
+PHP_FUNCTION(desktop_notify)
+{
+    char *title, *body;
+    size_t title_len, body_len;
+    zval *options = NULL;
+
+    if (zend_parse_parameters(ZEND_NUM_ARGS(), "ss|a", &title, &title_len, &body, &body_len, &options) == FAILURE) {
+        RETURN_THROWS();
+    }
+
+#ifdef HAVE_LIBNOTIFY
+    if (!notify_is_initted()) {
+        if (!notify_init("PHPNative")) {
+            php_error_docref(NULL, E_WARNING, "Failed to initialize libnotify");
+            RETURN_FALSE;
+        }
+    }
+
+    NotifyNotification *n = notify_notification_new(title, body, NULL);
+    if (!n) {
+        php_error_docref(NULL, E_WARNING, "Failed to create notification");
+        RETURN_FALSE;
+    }
+
+    if (options && Z_TYPE_P(options) == IS_ARRAY) {
+        zval *timeout = zend_hash_str_find(Z_ARRVAL_P(options), "timeout", sizeof("timeout") - 1);
+        if (timeout && Z_TYPE_P(timeout) == IS_LONG) {
+            notify_notification_set_timeout(n, (int) Z_LVAL_P(timeout));
+        }
+
+        zval *urgency = zend_hash_str_find(Z_ARRVAL_P(options), "urgency", sizeof("urgency") - 1);
+        if (urgency && Z_TYPE_P(urgency) == IS_STRING) {
+            const char *u = Z_STRVAL_P(urgency);
+            if (strcmp(u, "low") == 0) {
+                notify_notification_set_urgency(n, NOTIFY_URGENCY_LOW);
+            } else if (strcmp(u, "critical") == 0) {
+                notify_notification_set_urgency(n, NOTIFY_URGENCY_CRITICAL);
+            } else {
+                notify_notification_set_urgency(n, NOTIFY_URGENCY_NORMAL);
+            }
+        }
+    }
+
+    GError *error = NULL;
+    gboolean res = notify_notification_show(n, &error);
+    if (!res) {
+        if (error) {
+            php_error_docref(NULL, E_WARNING, "Notification error: %s", error->message);
+            g_error_free(error);
+        }
+        g_object_unref(G_OBJECT(n));
+        RETURN_FALSE;
+    }
+
+    g_object_unref(G_OBJECT(n));
+    RETURN_TRUE;
+#else
+    php_error_docref(NULL, E_WARNING, "desktop_notify() not available (libnotify not found at build time)");
+    RETURN_FALSE;
+#endif
+}
+
 PHP_FUNCTION(sdl_create_box_shadow_texture) {
     zval *ren_res;
     SDL_Renderer *renderer;
@@ -743,10 +808,46 @@ PHP_FUNCTION(sdl_rounded_box)
         RETURN_FALSE;
     }
 
-    if (roundedBoxRGBA(ren, (Sint16)x1, (Sint16)y1, (Sint16)x2, (Sint16)y2, (Sint16)rad, (Uint8)r, (Uint8)g, (Uint8)b, (Uint8)a) == 0) {
-        RETURN_TRUE;
-    }
-    RETURN_FALSE;
+    // Zeichne eine Box mit gleichen Radien an allen Ecken (Wrapper um die erweiterte Variante)
+    SDL_SetRenderDrawColor(ren, (Uint8)r, (Uint8)g, (Uint8)b, (Uint8)a);
+
+    int halfw = ((Sint16)x2 - (Sint16)x1) / 2;
+    int halfh = ((Sint16)y2 - (Sint16)y1) / 2;
+    int rad_tl = (int)rad;
+    int rad_tr = (int)rad;
+    int rad_br = (int)rad;
+    int rad_bl = (int)rad;
+
+    if (rad_tl > halfw) rad_tl = halfw; if (rad_tl > halfh) rad_tl = halfh;
+    if (rad_tr > halfw) rad_tr = halfw; if (rad_tr > halfh) rad_tr = halfh;
+    if (rad_br > halfw) rad_br = halfw; if (rad_br > halfh) rad_br = halfh;
+    if (rad_bl > halfw) rad_bl = halfw; if (rad_bl > halfh) rad_bl = halfh;
+
+    SDL_FRect topRect = { x1 + rad_tl, y1, x2 - x1 - rad_tl - rad_tr, rad_tl > rad_tr ? rad_tl : rad_tr };
+    if (topRect.w > 0 && topRect.h > 0) SDL_RenderFillRect(ren, &topRect);
+
+    int maxBottomRad = rad_bl > rad_br ? rad_bl : rad_br;
+    SDL_FRect bottomRect = { x1 + rad_bl, y2 - maxBottomRad, x2 - x1 - rad_bl - rad_br, maxBottomRad };
+    if (bottomRect.w > 0 && bottomRect.h > 0) SDL_RenderFillRect(ren, &bottomRect);
+
+    SDL_FRect leftRect = { x1, y1 + rad_tl, rad_tl > rad_bl ? rad_tl : rad_bl, y2 - y1 - rad_tl - rad_bl };
+    if (leftRect.w > 0 && leftRect.h > 0) SDL_RenderFillRect(ren, &leftRect);
+
+    int maxRightRad = rad_tr > rad_br ? rad_tr : rad_br;
+    SDL_FRect rightRect = { x2 - maxRightRad, y1 + rad_tr, maxRightRad, y2 - y1 - rad_tr - rad_br };
+    if (rightRect.w > 0 && rightRect.h > 0) SDL_RenderFillRect(ren, &rightRect);
+
+    int maxLeftRad = rad_tl > rad_bl ? rad_tl : rad_bl;
+    maxRightRad = rad_tr > rad_br ? rad_tr : rad_br;
+    SDL_FRect centerRect = { x1 + maxLeftRad, y1, x2 - x1 - maxLeftRad - maxRightRad, y2 - y1 };
+    if (centerRect.w > 0 && centerRect.h > 0) SDL_RenderFillRect(ren, &centerRect);
+
+    if (rad_tl > 0) filled_quarter_circle(ren, x1 + rad_tl, y1 + rad_tl, rad_tl, 0);
+    if (rad_tr > 0) filled_quarter_circle(ren, x2 - rad_tr - 1, y1 + rad_tr, rad_tr, 1);
+    if (rad_br > 0) filled_quarter_circle(ren, x2 - rad_br - 1, y2 - rad_br - 1, rad_br, 2);
+    if (rad_bl > 0) filled_quarter_circle(ren, x1 + rad_bl, y2 - rad_bl - 1, rad_bl, 3);
+
+    RETURN_TRUE;
 }
 
 #include <math.h>
@@ -1141,6 +1242,11 @@ ZEND_BEGIN_ARG_INFO_EX(arginfo_sdl_set_texture_alpha_mod, 0, 0, 2)
     ZEND_ARG_INFO(0, alpha)
 ZEND_END_ARG_INFO()
 
+ZEND_BEGIN_ARG_INFO_EX(arginfo_desktop_notify, 0, 0, 2)
+    ZEND_ARG_INFO(0, title)
+    ZEND_ARG_INFO(0, body)
+    ZEND_ARG_ARRAY_INFO(0, options, 0)
+ZEND_END_ARG_INFO()
 ZEND_BEGIN_ARG_INFO_EX(arginfo_sdl_create_box_shadow_texture, 0, 0, 8)
     ZEND_ARG_INFO(0, renderer)
     ZEND_ARG_INFO(0, width)
@@ -1259,6 +1365,7 @@ const zend_function_entry sdl3_functions[] = {
     PHP_FE(sdl_update_texture, arginfo_sdl_update_texture)
     PHP_FE(sdl_set_texture_blend_mode, arginfo_sdl_set_texture_blend_mode)
     PHP_FE(sdl_set_texture_alpha_mod, arginfo_sdl_set_texture_alpha_mod)
+    PHP_FE(desktop_notify, arginfo_desktop_notify)
     PHP_FE(sdl_create_box_shadow_texture, arginfo_sdl_create_box_shadow_texture)
     PHP_FE(sdl_get_render_target, arginfo_sdl_get_render_target)
     PHP_FE(sdl_set_render_target, arginfo_sdl_set_render_target)

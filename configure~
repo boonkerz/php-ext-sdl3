@@ -802,6 +802,8 @@ RANLIB
 AR
 ECHO
 LN_S
+LIBNOTIFY_LIBS
+LIBNOTIFY_CFLAGS
 SDL3_TTF_LIBS
 SDL3_TTF_CFLAGS
 SDL3_IMAGE_LIBS
@@ -917,7 +919,9 @@ SDL3_GFX_LIBS
 SDL3_IMAGE_CFLAGS
 SDL3_IMAGE_LIBS
 SDL3_TTF_CFLAGS
-SDL3_TTF_LIBS'
+SDL3_TTF_LIBS
+LIBNOTIFY_CFLAGS
+LIBNOTIFY_LIBS'
 
 
 # Initialize some variables set by options.
@@ -1601,6 +1605,10 @@ Some influential environment variables:
               C compiler flags for SDL3_TTF, overriding pkg-config
   SDL3_TTF_LIBS
               linker flags for SDL3_TTF, overriding pkg-config
+  LIBNOTIFY_CFLAGS
+              C compiler flags for LIBNOTIFY, overriding pkg-config
+  LIBNOTIFY_LIBS
+              linker flags for LIBNOTIFY, overriding pkg-config
 
 Use these variables to override the choices made by 'configure' or to help
 it to find libraries and programs with nonstandard names/locations.
@@ -5009,9 +5017,21 @@ else
 printf "%s\n" "yes" >&6; }
 
     CFLAGS="$CFLAGS $SDL3_CFLAGS"
-    LDFLAGS="$LDFLAGS $SDL3_LIBS"
 
 fi
+
+    { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for static SDL3 libs" >&5
+printf %s "checking for static SDL3 libs... " >&6; }
+  SDL3_STATIC_LIBS=`$PKG_CONFIG --libs --static sdl3 2>/dev/null`
+  if test "x$SDL3_STATIC_LIBS" != "x"; then
+    { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $SDL3_STATIC_LIBS" >&5
+printf "%s\n" "$SDL3_STATIC_LIBS" >&6; }
+    LDFLAGS="$LDFLAGS $SDL3_STATIC_LIBS"
+  else
+    { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: not found, using shared SDL3 libs" >&5
+printf "%s\n" "not found, using shared SDL3 libs" >&6; }
+    LDFLAGS="$LDFLAGS $SDL3_LIBS"
+  fi
 
   if test "$PHP_SDL3_GFX" != "no"; then
     if test -d "$PHP_SDL3_GFX"; then
@@ -5093,9 +5113,21 @@ else
 printf "%s\n" "yes" >&6; }
 
       CFLAGS="$CFLAGS $SDL3_GFX_CFLAGS"
-      LDFLAGS="$LDFLAGS $SDL3_GFX_LIBS"
 
 fi
+
+        { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for static SDL3_gfx libs" >&5
+printf %s "checking for static SDL3_gfx libs... " >&6; }
+    SDL3_GFX_STATIC_LIBS=`$PKG_CONFIG --libs --static sdl3-gfx 2>/dev/null`
+    if test "x$SDL3_GFX_STATIC_LIBS" != "x"; then
+      { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $SDL3_GFX_STATIC_LIBS" >&5
+printf "%s\n" "$SDL3_GFX_STATIC_LIBS" >&6; }
+      LDFLAGS="$LDFLAGS $SDL3_GFX_STATIC_LIBS"
+    else
+      { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: not found, using shared SDL3_gfx libs" >&5
+printf "%s\n" "not found, using shared SDL3_gfx libs" >&6; }
+      LDFLAGS="$LDFLAGS $SDL3_GFX_LIBS"
+    fi
   fi
 
   if test "$PHP_SDL3_IMAGE" != "no"; then
@@ -5178,9 +5210,21 @@ else
 printf "%s\n" "yes" >&6; }
 
       CFLAGS="$CFLAGS $SDL3_IMAGE_CFLAGS"
-      LDFLAGS="$LDFLAGS $SDL3_IMAGE_LIBS"
 
 fi
+
+        { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for static SDL3_image libs" >&5
+printf %s "checking for static SDL3_image libs... " >&6; }
+    SDL3_IMAGE_STATIC_LIBS=`$PKG_CONFIG --libs --static sdl3-image 2>/dev/null`
+    if test "x$SDL3_IMAGE_STATIC_LIBS" != "x"; then
+      { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $SDL3_IMAGE_STATIC_LIBS" >&5
+printf "%s\n" "$SDL3_IMAGE_STATIC_LIBS" >&6; }
+      LDFLAGS="$LDFLAGS $SDL3_IMAGE_STATIC_LIBS"
+    else
+      { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: not found, using shared SDL3_image libs" >&5
+printf "%s\n" "not found, using shared SDL3_image libs" >&6; }
+      LDFLAGS="$LDFLAGS $SDL3_IMAGE_LIBS"
+    fi
   fi
 
   if test "$PHP_SDL3_TTF" != "no"; then
@@ -5263,10 +5307,106 @@ else
 printf "%s\n" "yes" >&6; }
 
       CFLAGS="$CFLAGS $SDL3_TTF_CFLAGS"
-      LDFLAGS="$LDFLAGS $SDL3_TTF_LIBS"
 
 fi
+
+        { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for static SDL3_ttf libs" >&5
+printf %s "checking for static SDL3_ttf libs... " >&6; }
+    SDL3_TTF_STATIC_LIBS=`$PKG_CONFIG --libs --static sdl3-ttf 2>/dev/null`
+    if test "x$SDL3_TTF_STATIC_LIBS" != "x"; then
+      { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $SDL3_TTF_STATIC_LIBS" >&5
+printf "%s\n" "$SDL3_TTF_STATIC_LIBS" >&6; }
+      LDFLAGS="$LDFLAGS $SDL3_TTF_STATIC_LIBS"
+    else
+      { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: not found, using shared SDL3_ttf libs" >&5
+printf "%s\n" "not found, using shared SDL3_ttf libs" >&6; }
+      LDFLAGS="$LDFLAGS $SDL3_TTF_LIBS"
+    fi
   fi
+
+
+pkg_failed=no
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for libnotify" >&5
+printf %s "checking for libnotify... " >&6; }
+
+if test -n "$LIBNOTIFY_CFLAGS"; then
+    pkg_cv_LIBNOTIFY_CFLAGS="$LIBNOTIFY_CFLAGS"
+ elif test -n "$PKG_CONFIG"; then
+    if test -n "$PKG_CONFIG" && \
+    { { printf "%s\n" "$as_me:${as_lineno-$LINENO}: \$PKG_CONFIG --exists --print-errors \"libnotify\""; } >&5
+  ($PKG_CONFIG --exists --print-errors "libnotify") 2>&5
+  ac_status=$?
+  printf "%s\n" "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
+  test $ac_status = 0; }; then
+  pkg_cv_LIBNOTIFY_CFLAGS=`$PKG_CONFIG --cflags "libnotify" 2>/dev/null`
+		      test "x$?" != "x0" && pkg_failed=yes
+else
+  pkg_failed=yes
+fi
+ else
+    pkg_failed=untried
+fi
+if test -n "$LIBNOTIFY_LIBS"; then
+    pkg_cv_LIBNOTIFY_LIBS="$LIBNOTIFY_LIBS"
+ elif test -n "$PKG_CONFIG"; then
+    if test -n "$PKG_CONFIG" && \
+    { { printf "%s\n" "$as_me:${as_lineno-$LINENO}: \$PKG_CONFIG --exists --print-errors \"libnotify\""; } >&5
+  ($PKG_CONFIG --exists --print-errors "libnotify") 2>&5
+  ac_status=$?
+  printf "%s\n" "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
+  test $ac_status = 0; }; then
+  pkg_cv_LIBNOTIFY_LIBS=`$PKG_CONFIG --libs "libnotify" 2>/dev/null`
+		      test "x$?" != "x0" && pkg_failed=yes
+else
+  pkg_failed=yes
+fi
+ else
+    pkg_failed=untried
+fi
+
+
+
+if test $pkg_failed = yes; then
+        { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: no" >&5
+printf "%s\n" "no" >&6; }
+
+if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
+        _pkg_short_errors_supported=yes
+else
+        _pkg_short_errors_supported=no
+fi
+        if test $_pkg_short_errors_supported = yes; then
+	        LIBNOTIFY_PKG_ERRORS=`$PKG_CONFIG --short-errors --print-errors --cflags --libs "libnotify" 2>&1`
+        else
+	        LIBNOTIFY_PKG_ERRORS=`$PKG_CONFIG --print-errors --cflags --libs "libnotify" 2>&1`
+        fi
+	# Put the nasty error message in config.log where it belongs
+	echo "$LIBNOTIFY_PKG_ERRORS" >&5
+
+
+    { printf "%s\n" "$as_me:${as_lineno-$LINENO}: WARNING: libnotify not found via pkg-config, desktop_notify() will be disabled" >&5
+printf "%s\n" "$as_me: WARNING: libnotify not found via pkg-config, desktop_notify() will be disabled" >&2;}
+
+elif test $pkg_failed = untried; then
+        { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: no" >&5
+printf "%s\n" "no" >&6; }
+
+    { printf "%s\n" "$as_me:${as_lineno-$LINENO}: WARNING: libnotify not found via pkg-config, desktop_notify() will be disabled" >&5
+printf "%s\n" "$as_me: WARNING: libnotify not found via pkg-config, desktop_notify() will be disabled" >&2;}
+
+else
+	LIBNOTIFY_CFLAGS=$pkg_cv_LIBNOTIFY_CFLAGS
+	LIBNOTIFY_LIBS=$pkg_cv_LIBNOTIFY_LIBS
+        { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+printf "%s\n" "yes" >&6; }
+
+
+printf "%s\n" "#define HAVE_LIBNOTIFY 1" >>confdefs.h
+
+    CFLAGS="$CFLAGS $LIBNOTIFY_CFLAGS"
+    LDFLAGS="$LDFLAGS $LIBNOTIFY_LIBS"
+
+fi
 
   SDL_SOURCE_FILES="sdl3.c helper.c sdl3_image.c sdl3_ttf.c sdl3_events.c"
 
@@ -6123,7 +6263,7 @@ ia64-*-hpux*)
   ;;
 *-*-irix6*)
   # Find out which ABI we are using.
-  echo '#line 6126 "configure"' > conftest.$ac_ext
+  echo '#line 6266 "configure"' > conftest.$ac_ext
   if { { eval echo "\"\$as_me\":${as_lineno-$LINENO}: \"$ac_compile\""; } >&5
   (eval $ac_compile) 2>&5
   ac_status=$?
@@ -7502,7 +7642,7 @@ else case e in #(
       LDFLAGS="$LDFLAGS -Wl,-exported_symbols_list,conftest.sym"
 
 cat > conftest.$ac_ext <<EOF
-#line 7505 "configure"
+#line 7645 "configure"
 #include "confdefs.h"
 int main(void) {
 ; return 0; }
@@ -7664,11 +7804,11 @@ else case e in #(
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"configure:7667: $lt_compile\"" >&5)
+   (eval echo "\"configure:7807: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "configure:7671: \$? = $ac_status" >&5
+   echo "configure:7811: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings other than the usual output.
@@ -7964,11 +8104,11 @@ else case e in #(
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"configure:7967: $lt_compile\"" >&5)
+   (eval echo "\"configure:8107: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "configure:7971: \$? = $ac_status" >&5
+   echo "configure:8111: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings other than the usual output.
@@ -8072,11 +8212,11 @@ else case e in #(
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"configure:8075: $lt_compile\"" >&5)
+   (eval echo "\"configure:8215: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "configure:8079: \$? = $ac_status" >&5
+   echo "configure:8219: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -8537,7 +8677,7 @@ _LT_EOF
        # Determine the default libpath from the value encoded in an empty executable.
 
 cat > conftest.$ac_ext <<EOF
-#line 8540 "configure"
+#line 8680 "configure"
 #include "confdefs.h"
 int main(void) {
 ; return 0; }
@@ -8579,7 +8719,7 @@ if test -z "$aix_libpath"; then aix_libpath="/usr/lib:/lib"; fi
 	 # Determine the default libpath from the value encoded in an empty executable.
 
 cat > conftest.$ac_ext <<EOF
-#line 8582 "configure"
+#line 8722 "configure"
 #include "confdefs.h"
 int main(void) {
 ; return 0; }
@@ -10160,7 +10300,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 10163 "configure"
+#line 10303 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -10259,7 +10399,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 10262 "configure"
+#line 10402 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -11328,7 +11468,7 @@ case $host_os in
       # Determine the default libpath from the value encoded in an empty executable.
 
 cat > conftest.$ac_ext <<EOF
-#line 11331 "configure"
+#line 11471 "configure"
 #include "confdefs.h"
 int main(void) {
 ; return 0; }
@@ -11371,7 +11511,7 @@ if test -z "$aix_libpath"; then aix_libpath="/usr/lib:/lib"; fi
 	# Determine the default libpath from the value encoded in an empty executable.
 
 cat > conftest.$ac_ext <<EOF
-#line 11374 "configure"
+#line 11514 "configure"
 #include "confdefs.h"
 int main(void) {
 ; return 0; }
@@ -12624,11 +12764,11 @@ else case e in #(
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"configure:12627: $lt_compile\"" >&5)
+   (eval echo "\"configure:12767: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "configure:12631: \$? = $ac_status" >&5
+   echo "configure:12771: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings other than the usual output.
@@ -12732,11 +12872,11 @@ else case e in #(
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"configure:12735: $lt_compile\"" >&5)
+   (eval echo "\"configure:12875: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "configure:12739: \$? = $ac_status" >&5
+   echo "configure:12879: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized

@@ -2,7 +2,6 @@
 #define PHP_SDL3_HELPER
 
 #include <SDL3/SDL.h>
-#include <SDL3_gfx/SDL3_gfxPrimitives.h>
 #include "math.h"
 
 // Zeichnet einen gefüllten Viertel-Kreis mit Anti-Aliasing (filled quarter circle).

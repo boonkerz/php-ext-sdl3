@@ -802,12 +802,12 @@ RANLIB
 AR
 ECHO
 LN_S
+LIBNOTIFY_LIBS
+LIBNOTIFY_CFLAGS
 SDL3_TTF_LIBS
 SDL3_TTF_CFLAGS
 SDL3_IMAGE_LIBS
 SDL3_IMAGE_CFLAGS
-SDL3_GFX_LIBS
-SDL3_GFX_CFLAGS
 SDL3_LIBS
 SDL3_CFLAGS
 SHLIB_DL_SUFFIX_NAME
@@ -887,7 +887,6 @@ with_libdir
 with_php_config
 enable_
 with_sdl3
-with_sdl3_gfx
 with_sdl3_image
 with_sdl3_ttf
 enable_shared
@@ -912,12 +911,12 @@ CPPFLAGS
 CPP
 SDL3_CFLAGS
 SDL3_LIBS
-SDL3_GFX_CFLAGS
-SDL3_GFX_LIBS
 SDL3_IMAGE_CFLAGS
 SDL3_IMAGE_LIBS
 SDL3_TTF_CFLAGS
-SDL3_TTF_LIBS'
+SDL3_TTF_LIBS
+LIBNOTIFY_CFLAGS
+LIBNOTIFY_LIBS'
 
 
 # Initialize some variables set by options.
@@ -1550,10 +1549,6 @@ Extension:
                           installation.
 
 
-  --with-sdl3-gfx=DIR     Enable sdl3_gfx support. DIR is the prefix for
-                          SDL3_gfx installation.
-
-
   --with-sdl3-image=DIR   Enable sdl3_image support. DIR is the prefix for
                           SDL3_image installation.
 
@@ -1589,10 +1584,6 @@ Some influential environment variables:
   CPP         C preprocessor
   SDL3_CFLAGS C compiler flags for SDL3, overriding pkg-config
   SDL3_LIBS   linker flags for SDL3, overriding pkg-config
-  SDL3_GFX_CFLAGS 
-              C compiler flags for SDL3_GFX, overriding pkg-config
-  SDL3_GFX_LIBS 
-              linker flags for SDL3_GFX, overriding pkg-config
   SDL3_IMAGE_CFLAGS 
               C compiler flags for SDL3_IMAGE, overriding pkg-config
   SDL3_IMAGE_LIBS 
@@ -1601,6 +1592,10 @@ Some influential environment variables:
               C compiler flags for SDL3_TTF, overriding pkg-config
   SDL3_TTF_LIBS 
               linker flags for SDL3_TTF, overriding pkg-config
+  LIBNOTIFY_CFLAGS 
+              C compiler flags for LIBNOTIFY, overriding pkg-config
+  LIBNOTIFY_LIBS 
+              linker flags for LIBNOTIFY, overriding pkg-config
 
 Use these variables to override the choices made by 'configure' or to help
 it to find libraries and programs with nonstandard names/locations.
@@ -4777,57 +4772,6 @@ printf "%s\n" "$ext_output" >&6; }
 
 
 
-php_with_sdl3_gfx=no
-
-{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for sdl3_gfx support" >&5
-printf %s "checking for sdl3_gfx support... " >&6; }
-
-@%:@ Check whether --with-sdl3_gfx was given.
-if test ${with_sdl3_gfx+y}
-then :
-  withval=$with_sdl3_gfx; PHP_SDL3_GFX=$withval
-else case e in @%:@(
-  e) 
-  PHP_SDL3_GFX=no
-  test "$PHP_ENABLE_ALL" && PHP_SDL3_GFX=$PHP_ENABLE_ALL
- ;;
-esac
-fi
-
-
-
-ext_output="yes, shared"
-ext_shared=yes
-case $PHP_SDL3_GFX in
-shared,*)
-  PHP_SDL3_GFX=$(echo "$PHP_SDL3_GFX"|$SED 's/^shared,//')
-  ;;
-shared)
-  PHP_SDL3_GFX=yes
-  ;;
-no)
-  ext_output=no
-  ext_shared=no
-  ;;
-*)
-  ext_output=yes
-  ext_shared=no
-  ;;
-esac
-
-
-  ext_output="yes, shared"
-  ext_shared=yes
-  test "$PHP_SDL3_GFX" = "no" && PHP_SDL3_GFX=yes
-
-
-{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $ext_output" >&5
-printf "%s\n" "$ext_output" >&6; }
-
-
-
-
-
 php_with_sdl3_image=no
 
 { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for sdl3_image support" >&5
@@ -5025,103 +4969,6 @@ printf "%s\n" "not found, using shared SDL3 libs" >&6; }
     LDFLAGS="$LDFLAGS $SDL3_LIBS"
   fi
 
-  if test "$PHP_SDL3_GFX" != "no"; then
-    if test -d "$PHP_SDL3_GFX"; then
-        PKG_CONFIG_PATH="$PHP_SDL3_GFX/lib/pkgconfig:$PHP_SDL3_GFX/share/pkgconfig:$PKG_CONFIG_PATH"
-    fi
-
-    
-pkg_failed=no
-{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for sdl3-gfx >= 1.0.0" >&5
-printf %s "checking for sdl3-gfx >= 1.0.0... " >&6; }
-
-if test -n "$SDL3_GFX_CFLAGS"; then
-    pkg_cv_SDL3_GFX_CFLAGS="$SDL3_GFX_CFLAGS"
- elif test -n "$PKG_CONFIG"; then
-    if test -n "$PKG_CONFIG" && \
-    { { printf "%s\n" "$as_me:${as_lineno-$LINENO}: \$PKG_CONFIG --exists --print-errors \"sdl3-gfx >= 1.0.0\""; } >&5
-  ($PKG_CONFIG --exists --print-errors "sdl3-gfx >= 1.0.0") 2>&5
-  ac_status=$?
-  printf "%s\n" "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
-  test $ac_status = 0; }; then
-  pkg_cv_SDL3_GFX_CFLAGS=`$PKG_CONFIG --cflags "sdl3-gfx >= 1.0.0" 2>/dev/null`
-		      test "x$?" != "x0" && pkg_failed=yes 
-else
-  pkg_failed=yes
-fi
- else
-    pkg_failed=untried
-fi
-if test -n "$SDL3_GFX_LIBS"; then
-    pkg_cv_SDL3_GFX_LIBS="$SDL3_GFX_LIBS"
- elif test -n "$PKG_CONFIG"; then
-    if test -n "$PKG_CONFIG" && \
-    { { printf "%s\n" "$as_me:${as_lineno-$LINENO}: \$PKG_CONFIG --exists --print-errors \"sdl3-gfx >= 1.0.0\""; } >&5
-  ($PKG_CONFIG --exists --print-errors "sdl3-gfx >= 1.0.0") 2>&5
-  ac_status=$?
-  printf "%s\n" "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
-  test $ac_status = 0; }; then
-  pkg_cv_SDL3_GFX_LIBS=`$PKG_CONFIG --libs "sdl3-gfx >= 1.0.0" 2>/dev/null`
-		      test "x$?" != "x0" && pkg_failed=yes 
-else
-  pkg_failed=yes
-fi
- else
-    pkg_failed=untried
-fi
-
-
-
-if test $pkg_failed = yes; then
-        { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: no" >&5
-printf "%s\n" "no" >&6; }
-        
-if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
-        _pkg_short_errors_supported=yes
-else
-        _pkg_short_errors_supported=no
-fi
-        if test $_pkg_short_errors_supported = yes; then
-	        SDL3_GFX_PKG_ERRORS=`$PKG_CONFIG --short-errors --print-errors --cflags --libs "sdl3-gfx >= 1.0.0" 2>&1`
-        else
-	        SDL3_GFX_PKG_ERRORS=`$PKG_CONFIG --print-errors --cflags --libs "sdl3-gfx >= 1.0.0" 2>&1`
-        fi
-	# Put the nasty error message in config.log where it belongs
-	echo "$SDL3_GFX_PKG_ERRORS" >&5
-
-	
-      as_fn_error $? "SDL3_gfx not found. Please check your installation or use --with-sdl3-gfx=/path/to/sdl3_gfx" "$LINENO" 5
-    
-elif test $pkg_failed = untried; then
-        { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: no" >&5
-printf "%s\n" "no" >&6; }
-	
-      as_fn_error $? "SDL3_gfx not found. Please check your installation or use --with-sdl3-gfx=/path/to/sdl3_gfx" "$LINENO" 5
-    
-else
-	SDL3_GFX_CFLAGS=$pkg_cv_SDL3_GFX_CFLAGS
-	SDL3_GFX_LIBS=$pkg_cv_SDL3_GFX_LIBS
-        { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: yes" >&5
-printf "%s\n" "yes" >&6; }
-	
-      CFLAGS="$CFLAGS $SDL3_GFX_CFLAGS"
-    
-fi
-
-        { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for static SDL3_gfx libs" >&5
-printf %s "checking for static SDL3_gfx libs... " >&6; }
-    SDL3_GFX_STATIC_LIBS=`$PKG_CONFIG --libs --static sdl3-gfx 2>/dev/null`
-    if test "x$SDL3_GFX_STATIC_LIBS" != "x"; then
-      { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $SDL3_GFX_STATIC_LIBS" >&5
-printf "%s\n" "$SDL3_GFX_STATIC_LIBS" >&6; }
-      LDFLAGS="$LDFLAGS $SDL3_GFX_STATIC_LIBS"
-    else
-      { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: not found, using shared SDL3_gfx libs" >&5
-printf "%s\n" "not found, using shared SDL3_gfx libs" >&6; }
-      LDFLAGS="$LDFLAGS $SDL3_GFX_LIBS"
-    fi
-  fi
-
   if test "$PHP_SDL3_IMAGE" != "no"; then
     if test -d "$PHP_SDL3_IMAGE"; then
         PKG_CONFIG_PATH="$PHP_SDL3_IMAGE/lib/pkgconfig:$PHP_SDL3_IMAGE/share/pkgconfig:$PKG_CONFIG_PATH"
@@ -5315,6 +5162,90 @@ printf "%s\n" "not found, using shared SDL3_ttf libs" >&6; }
       LDFLAGS="$LDFLAGS $SDL3_TTF_LIBS"
     fi
   fi
+
+    
+pkg_failed=no
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for libnotify" >&5
+printf %s "checking for libnotify... " >&6; }
+
+if test -n "$LIBNOTIFY_CFLAGS"; then
+    pkg_cv_LIBNOTIFY_CFLAGS="$LIBNOTIFY_CFLAGS"
+ elif test -n "$PKG_CONFIG"; then
+    if test -n "$PKG_CONFIG" && \
+    { { printf "%s\n" "$as_me:${as_lineno-$LINENO}: \$PKG_CONFIG --exists --print-errors \"libnotify\""; } >&5
+  ($PKG_CONFIG --exists --print-errors "libnotify") 2>&5
+  ac_status=$?
+  printf "%s\n" "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
+  test $ac_status = 0; }; then
+  pkg_cv_LIBNOTIFY_CFLAGS=`$PKG_CONFIG --cflags "libnotify" 2>/dev/null`
+		      test "x$?" != "x0" && pkg_failed=yes 
+else
+  pkg_failed=yes
+fi
+ else
+    pkg_failed=untried
+fi
+if test -n "$LIBNOTIFY_LIBS"; then
+    pkg_cv_LIBNOTIFY_LIBS="$LIBNOTIFY_LIBS"
+ elif test -n "$PKG_CONFIG"; then
+    if test -n "$PKG_CONFIG" && \
+    { { printf "%s\n" "$as_me:${as_lineno-$LINENO}: \$PKG_CONFIG --exists --print-errors \"libnotify\""; } >&5
+  ($PKG_CONFIG --exists --print-errors "libnotify") 2>&5
+  ac_status=$?
+  printf "%s\n" "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
+  test $ac_status = 0; }; then
+  pkg_cv_LIBNOTIFY_LIBS=`$PKG_CONFIG --libs "libnotify" 2>/dev/null`
+		      test "x$?" != "x0" && pkg_failed=yes 
+else
+  pkg_failed=yes
+fi
+ else
+    pkg_failed=untried
+fi
+
+
+
+if test $pkg_failed = yes; then
+        { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: no" >&5
+printf "%s\n" "no" >&6; }
+        
+if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
+        _pkg_short_errors_supported=yes
+else
+        _pkg_short_errors_supported=no
+fi
+        if test $_pkg_short_errors_supported = yes; then
+	        LIBNOTIFY_PKG_ERRORS=`$PKG_CONFIG --short-errors --print-errors --cflags --libs "libnotify" 2>&1`
+        else
+	        LIBNOTIFY_PKG_ERRORS=`$PKG_CONFIG --print-errors --cflags --libs "libnotify" 2>&1`
+        fi
+	# Put the nasty error message in config.log where it belongs
+	echo "$LIBNOTIFY_PKG_ERRORS" >&5
+
+	
+    { printf "%s\n" "$as_me:${as_lineno-$LINENO}: WARNING: libnotify not found via pkg-config, desktop_notify() will be disabled" >&5
+printf "%s\n" "$as_me: WARNING: libnotify not found via pkg-config, desktop_notify() will be disabled" >&2;}
+  
+elif test $pkg_failed = untried; then
+        { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: no" >&5
+printf "%s\n" "no" >&6; }
+	
+    { printf "%s\n" "$as_me:${as_lineno-$LINENO}: WARNING: libnotify not found via pkg-config, desktop_notify() will be disabled" >&5
+printf "%s\n" "$as_me: WARNING: libnotify not found via pkg-config, desktop_notify() will be disabled" >&2;}
+  
+else
+	LIBNOTIFY_CFLAGS=$pkg_cv_LIBNOTIFY_CFLAGS
+	LIBNOTIFY_LIBS=$pkg_cv_LIBNOTIFY_LIBS
+        { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+printf "%s\n" "yes" >&6; }
+	
+    
+printf "%s\n" "@%:@define HAVE_LIBNOTIFY 1" >>confdefs.h
+
+    CFLAGS="$CFLAGS $LIBNOTIFY_CFLAGS"
+    LDFLAGS="$LDFLAGS $LIBNOTIFY_LIBS"
+  
+fi
 
   SDL_SOURCE_FILES="sdl3.c helper.c sdl3_image.c sdl3_ttf.c sdl3_events.c"
 
