@@ -802,6 +802,8 @@ RANLIB
 AR
 ECHO
 LN_S
+APPINDICATOR_LIBS
+APPINDICATOR_CFLAGS
 LIBNOTIFY_LIBS
 LIBNOTIFY_CFLAGS
 SDL3_TTF_LIBS
@@ -916,7 +918,9 @@ SDL3_IMAGE_LIBS
 SDL3_TTF_CFLAGS
 SDL3_TTF_LIBS
 LIBNOTIFY_CFLAGS
-LIBNOTIFY_LIBS'
+LIBNOTIFY_LIBS
+APPINDICATOR_CFLAGS
+APPINDICATOR_LIBS'
 
 
 # Initialize some variables set by options.
@@ -1596,6 +1600,10 @@ Some influential environment variables:
               C compiler flags for LIBNOTIFY, overriding pkg-config
   LIBNOTIFY_LIBS 
               linker flags for LIBNOTIFY, overriding pkg-config
+  APPINDICATOR_CFLAGS 
+              C compiler flags for APPINDICATOR, overriding pkg-config
+  APPINDICATOR_LIBS 
+              linker flags for APPINDICATOR, overriding pkg-config
 
 Use these variables to override the choices made by 'configure' or to help
 it to find libraries and programs with nonstandard names/locations.
@@ -5244,6 +5252,90 @@ printf "%s\n" "@%:@define HAVE_LIBNOTIFY 1" >>confdefs.h
 
     CFLAGS="$CFLAGS $LIBNOTIFY_CFLAGS"
     LDFLAGS="$LDFLAGS $LIBNOTIFY_LIBS"
+  
+fi
+
+    
+pkg_failed=no
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for appindicator3-0.1" >&5
+printf %s "checking for appindicator3-0.1... " >&6; }
+
+if test -n "$APPINDICATOR_CFLAGS"; then
+    pkg_cv_APPINDICATOR_CFLAGS="$APPINDICATOR_CFLAGS"
+ elif test -n "$PKG_CONFIG"; then
+    if test -n "$PKG_CONFIG" && \
+    { { printf "%s\n" "$as_me:${as_lineno-$LINENO}: \$PKG_CONFIG --exists --print-errors \"appindicator3-0.1\""; } >&5
+  ($PKG_CONFIG --exists --print-errors "appindicator3-0.1") 2>&5
+  ac_status=$?
+  printf "%s\n" "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
+  test $ac_status = 0; }; then
+  pkg_cv_APPINDICATOR_CFLAGS=`$PKG_CONFIG --cflags "appindicator3-0.1" 2>/dev/null`
+		      test "x$?" != "x0" && pkg_failed=yes 
+else
+  pkg_failed=yes
+fi
+ else
+    pkg_failed=untried
+fi
+if test -n "$APPINDICATOR_LIBS"; then
+    pkg_cv_APPINDICATOR_LIBS="$APPINDICATOR_LIBS"
+ elif test -n "$PKG_CONFIG"; then
+    if test -n "$PKG_CONFIG" && \
+    { { printf "%s\n" "$as_me:${as_lineno-$LINENO}: \$PKG_CONFIG --exists --print-errors \"appindicator3-0.1\""; } >&5
+  ($PKG_CONFIG --exists --print-errors "appindicator3-0.1") 2>&5
+  ac_status=$?
+  printf "%s\n" "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
+  test $ac_status = 0; }; then
+  pkg_cv_APPINDICATOR_LIBS=`$PKG_CONFIG --libs "appindicator3-0.1" 2>/dev/null`
+		      test "x$?" != "x0" && pkg_failed=yes 
+else
+  pkg_failed=yes
+fi
+ else
+    pkg_failed=untried
+fi
+
+
+
+if test $pkg_failed = yes; then
+        { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: no" >&5
+printf "%s\n" "no" >&6; }
+        
+if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
+        _pkg_short_errors_supported=yes
+else
+        _pkg_short_errors_supported=no
+fi
+        if test $_pkg_short_errors_supported = yes; then
+	        APPINDICATOR_PKG_ERRORS=`$PKG_CONFIG --short-errors --print-errors --cflags --libs "appindicator3-0.1" 2>&1`
+        else
+	        APPINDICATOR_PKG_ERRORS=`$PKG_CONFIG --print-errors --cflags --libs "appindicator3-0.1" 2>&1`
+        fi
+	# Put the nasty error message in config.log where it belongs
+	echo "$APPINDICATOR_PKG_ERRORS" >&5
+
+	
+    { printf "%s\n" "$as_me:${as_lineno-$LINENO}: WARNING: appindicator3-0.1 not found, tray AppIndicator backend will be disabled" >&5
+printf "%s\n" "$as_me: WARNING: appindicator3-0.1 not found, tray AppIndicator backend will be disabled" >&2;}
+  
+elif test $pkg_failed = untried; then
+        { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: no" >&5
+printf "%s\n" "no" >&6; }
+	
+    { printf "%s\n" "$as_me:${as_lineno-$LINENO}: WARNING: appindicator3-0.1 not found, tray AppIndicator backend will be disabled" >&5
+printf "%s\n" "$as_me: WARNING: appindicator3-0.1 not found, tray AppIndicator backend will be disabled" >&2;}
+  
+else
+	APPINDICATOR_CFLAGS=$pkg_cv_APPINDICATOR_CFLAGS
+	APPINDICATOR_LIBS=$pkg_cv_APPINDICATOR_LIBS
+        { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+printf "%s\n" "yes" >&6; }
+	
+    
+printf "%s\n" "@%:@define HAVE_TRAY_APPINDICATOR 1" >>confdefs.h
+
+    CFLAGS="$CFLAGS $APPINDICATOR_CFLAGS"
+    LDFLAGS="$LDFLAGS $APPINDICATOR_LIBS"
   
 fi
 

@@ -11,10 +11,22 @@
 #include "sdl3_events.h"
 #include <SDL3/SDL.h>
 #include <math.h>
+#include <string.h>
 
 #ifdef HAVE_LIBNOTIFY
 #include <libnotify/notify.h>
 #endif
+
+// Cross-platform tray support (zserge/tray)
+#ifdef _WIN32
+#define TRAY_WINAPI
+#elif defined(__APPLE__)
+#define TRAY_APPKIT
+#elif defined(HAVE_TRAY_APPINDICATOR)
+#define TRAY_APPINDICATOR
+#endif
+
+#include "tray-lib/tray.h"
 
 // Resource handles (nicht static, damit sie in anderen Modulen verfügbar sind)
 int le_sdl_window;
@@ -43,6 +55,26 @@ static void sdl_texture_dtor(zend_resource *rsrc) {
     if (tex) {
         SDL_DestroyTexture(tex);
     }
+}
+
+// --- Tray integration state ---
+static struct tray g_tray;
+static struct tray_menu *g_tray_menu = NULL;
+static int g_tray_menu_count = 0;
+static int g_tray_last_index = -1;
+static int g_tray_last_clicked = 0;
+
+static void php_tray_menu_cb(struct tray_menu *m) {
+    if (!m || m->context == NULL) {
+        return;
+    }
+    intptr_t idx = (intptr_t)m->context;
+    g_tray_last_index = (int)idx;
+    g_tray_last_clicked = 1;
+
+    // Signal the native tray loop to exit; tray_poll()
+    // will then see a negative result and return false.
+    tray_exit();
 }
 
 PHP_MINIT_FUNCTION(sdl3) {
@@ -526,6 +558,93 @@ PHP_FUNCTION(sdl_set_texture_alpha_mod) {
         RETURN_FALSE;
     }
 
+    RETURN_TRUE;
+}
+
+PHP_FUNCTION(tray_setup)
+{
+    char *icon;
+    size_t icon_len;
+    zval *menu_arr = NULL;
+
+    if (zend_parse_parameters(ZEND_NUM_ARGS(), "s|a", &icon, &icon_len, &menu_arr) == FAILURE) {
+        RETURN_THROWS();
+    }
+
+    memset(&g_tray, 0, sizeof(g_tray));
+    g_tray.icon = estrdup(icon);
+
+    g_tray_menu = NULL;
+    g_tray_menu_count = 0;
+
+    if (menu_arr && Z_TYPE_P(menu_arr) == IS_ARRAY) {
+        HashTable *ht = Z_ARRVAL_P(menu_arr);
+        int count = zend_hash_num_elements(ht);
+        if (count > 0) {
+            g_tray_menu = ecalloc(count + 1, sizeof(struct tray_menu));
+            g_tray_menu_count = count;
+
+            int idx = 0;
+            zval *val;
+            ZEND_HASH_FOREACH_VAL(ht, val) {
+                if (idx >= count) {
+                    break;
+                }
+                struct tray_menu *m = &g_tray_menu[idx];
+                if (Z_TYPE_P(val) == IS_STRING) {
+                    m->text = estrdup(Z_STRVAL_P(val));
+                } else {
+                    m->text = estrdup("-");
+                }
+                m->disabled = 0;
+                m->checked = 0;
+                m->cb = php_tray_menu_cb;
+                m->context = (void *)(intptr_t)idx;
+                m->submenu = NULL;
+                idx++;
+            } ZEND_HASH_FOREACH_END();
+
+            g_tray.menu = g_tray_menu;
+        }
+    }
+
+    if (tray_init(&g_tray) != 0) {
+        RETURN_FALSE;
+    }
+
+    g_tray_last_index = -1;
+    g_tray_last_clicked = 0;
+    RETURN_TRUE;
+}
+
+PHP_FUNCTION(tray_poll)
+{
+    zend_bool blocking = 0;
+    if (zend_parse_parameters(ZEND_NUM_ARGS(), "|b", &blocking) == FAILURE) {
+        RETURN_THROWS();
+    }
+
+    int res = tray_loop(blocking ? 1 : 0);
+    if (res < 0) {
+        RETURN_FALSE;
+    }
+
+    if (g_tray_last_clicked) {
+        int idx = g_tray_last_index;
+        g_tray_last_clicked = 0;
+        RETURN_LONG(idx);
+    }
+
+    RETURN_LONG(-1);
+}
+
+PHP_FUNCTION(tray_exit)
+{
+    if (zend_parse_parameters_none() == FAILURE) {
+        RETURN_THROWS();
+    }
+
+    tray_exit();
     RETURN_TRUE;
 }
 
@@ -1105,6 +1224,25 @@ PHP_FUNCTION(sdl_get_current_video_driver) {
     RETURN_STRING(drv);
 }
 
+PHP_FUNCTION(sdl_get_num_video_drivers) {
+    int num = SDL_GetNumVideoDrivers();
+    RETURN_LONG(num);
+}
+
+PHP_FUNCTION(sdl_get_video_driver) {
+    zend_long index;
+
+    if (zend_parse_parameters(ZEND_NUM_ARGS(), "l", &index) == FAILURE) {
+        RETURN_THROWS();
+    }
+
+    const char *driver = SDL_GetVideoDriver((int)index);
+    if (!driver) {
+        RETURN_FALSE;
+    }
+    RETURN_STRING(driver);
+}
+
 PHP_FUNCTION(sdl_start_text_input) {
     zval *win_res;
     SDL_Window *win;
@@ -1242,6 +1380,18 @@ ZEND_BEGIN_ARG_INFO_EX(arginfo_sdl_set_texture_alpha_mod, 0, 0, 2)
     ZEND_ARG_INFO(0, alpha)
 ZEND_END_ARG_INFO()
 
+ZEND_BEGIN_ARG_INFO_EX(arginfo_tray_setup, 0, 0, 1)
+    ZEND_ARG_INFO(0, icon)
+    ZEND_ARG_ARRAY_INFO(0, menuItems, 0)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(arginfo_tray_poll, 0, 0, 0)
+    ZEND_ARG_INFO(0, blocking)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(arginfo_tray_exit, 0, 0, 0)
+ZEND_END_ARG_INFO()
+
 ZEND_BEGIN_ARG_INFO_EX(arginfo_desktop_notify, 0, 0, 2)
     ZEND_ARG_INFO(0, title)
     ZEND_ARG_INFO(0, body)
@@ -1329,6 +1479,14 @@ ZEND_END_ARG_INFO()
 
 ZEND_BEGIN_ARG_INFO_EX(arginfo_sdl_get_current_video_driver, 0, 0, 0)
 ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(arginfo_sdl_get_num_video_drivers, 0, 0, 0)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(arginfo_sdl_get_video_driver, 0, 0, 1)
+    ZEND_ARG_INFO(0, index)
+ZEND_END_ARG_INFO()
+
 ZEND_BEGIN_ARG_INFO_EX(arginfo_sdl_get_renderer_output_size, 0, 0, 1)
     ZEND_ARG_INFO(0, renderer)
 ZEND_END_ARG_INFO()
@@ -1365,6 +1523,11 @@ const zend_function_entry sdl3_functions[] = {
     PHP_FE(sdl_update_texture, arginfo_sdl_update_texture)
     PHP_FE(sdl_set_texture_blend_mode, arginfo_sdl_set_texture_blend_mode)
     PHP_FE(sdl_set_texture_alpha_mod, arginfo_sdl_set_texture_alpha_mod)
+    // Tray API
+    PHP_FE(tray_setup, arginfo_tray_setup)
+    PHP_FE(tray_poll, arginfo_tray_poll)
+    PHP_FE(tray_exit, arginfo_tray_exit)
+    // Desktop notifications
     PHP_FE(desktop_notify, arginfo_desktop_notify)
     PHP_FE(sdl_create_box_shadow_texture, arginfo_sdl_create_box_shadow_texture)
     PHP_FE(sdl_get_render_target, arginfo_sdl_get_render_target)
@@ -1378,6 +1541,8 @@ const zend_function_entry sdl3_functions[] = {
     PHP_FE(sdl_get_window_display_scale, arginfo_sdl_get_window_display_scale)
     PHP_FE(sdl_get_display_content_scale, arginfo_sdl_get_display_content_scale)
     PHP_FE(sdl_get_current_video_driver, arginfo_sdl_get_current_video_driver)
+    PHP_FE(sdl_get_num_video_drivers, arginfo_sdl_get_num_video_drivers)
+    PHP_FE(sdl_get_video_driver, arginfo_sdl_get_video_driver)
     PHP_FE(sdl_get_renderer_output_size, arginfo_sdl_get_renderer_output_size)
     PHP_FE(sdl_start_text_input, arginfo_sdl_start_text_input)
     PHP_FE(sdl_stop_text_input, arginfo_sdl_stop_text_input)

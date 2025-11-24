@@ -307,9 +307,19 @@ m4trace:config.m4:82: -1- AC_DEFINE_TRACE_LITERAL([HAVE_LIBNOTIFY])
 m4trace:config.m4:82: -1- m4_pattern_allow([^HAVE_LIBNOTIFY$])
 m4trace:config.m4:82: -1- AH_OUTPUT([HAVE_LIBNOTIFY], [/* Enable libnotify for desktop_notify() */
 @%:@undef HAVE_LIBNOTIFY])
-m4trace:config.m4:92: -1- AC_DEFINE_TRACE_LITERAL([COMPILE_DL_SDL3])
-m4trace:config.m4:92: -1- m4_pattern_allow([^COMPILE_DL_SDL3$])
-m4trace:config.m4:92: -1- AH_OUTPUT([COMPILE_DL_SDL3], [/* Define to 1 if the PHP extension \'sdl3\' is built as a dynamic module. */
+m4trace:config.m4:91: -1- AC_SUBST([APPINDICATOR_CFLAGS])
+m4trace:config.m4:91: -1- AC_SUBST_TRACE([APPINDICATOR_CFLAGS])
+m4trace:config.m4:91: -1- m4_pattern_allow([^APPINDICATOR_CFLAGS$])
+m4trace:config.m4:91: -1- AC_SUBST([APPINDICATOR_LIBS])
+m4trace:config.m4:91: -1- AC_SUBST_TRACE([APPINDICATOR_LIBS])
+m4trace:config.m4:91: -1- m4_pattern_allow([^APPINDICATOR_LIBS$])
+m4trace:config.m4:91: -1- AC_DEFINE_TRACE_LITERAL([HAVE_TRAY_APPINDICATOR])
+m4trace:config.m4:91: -1- m4_pattern_allow([^HAVE_TRAY_APPINDICATOR$])
+m4trace:config.m4:91: -1- AH_OUTPUT([HAVE_TRAY_APPINDICATOR], [/* Enable tray AppIndicator backend */
+@%:@undef HAVE_TRAY_APPINDICATOR])
+m4trace:config.m4:101: -1- AC_DEFINE_TRACE_LITERAL([COMPILE_DL_SDL3])
+m4trace:config.m4:101: -1- m4_pattern_allow([^COMPILE_DL_SDL3$])
+m4trace:config.m4:101: -1- AH_OUTPUT([COMPILE_DL_SDL3], [/* Define to 1 if the PHP extension \'sdl3\' is built as a dynamic module. */
 @%:@undef COMPILE_DL_SDL3])
 m4trace:configure.ac:150: -1- AC_PROG_LIBTOOL
 m4trace:configure.ac:150: -1- AC_SUBST([LN_S], [$as_ln_s])
