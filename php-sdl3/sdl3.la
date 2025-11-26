@@ -32,4 +32,4 @@ dlopen=''
 dlpreopen=''
 
 # Directory that this library needs to be installed in:
-libdir='/home/thomas/projekte/phpnative/php-sdl3/modules'
+libdir='/home/thomas/projekte/phpnative/framework/php-sdl3/modules'

@@ -74,7 +74,7 @@ static void php_tray_menu_cb(struct tray_menu *m) {
 
     // Signal the native tray loop to exit; tray_poll()
     // will then see a negative result and return false.
-    //tray_exit();
+    tray_exit();
 }
 
 PHP_MINIT_FUNCTION(sdl3) {
@@ -200,8 +200,10 @@ PHP_FUNCTION(sdl_get_window_id) {
 PHP_FUNCTION(sdl_create_renderer) {
     zval *win_res;
     SDL_Window *win;
+    char *renderer_name = NULL;
+    size_t renderer_name_len = 0;
 
-    if (zend_parse_parameters(ZEND_NUM_ARGS(), "r", &win_res) == FAILURE) {
+    if (zend_parse_parameters(ZEND_NUM_ARGS(), "r|s", &win_res, &renderer_name, &renderer_name_len) == FAILURE) {
         RETURN_THROWS();
     }
 
@@ -210,11 +212,30 @@ PHP_FUNCTION(sdl_create_renderer) {
         RETURN_FALSE;
     }
 
-    SDL_Renderer *ren = SDL_CreateRenderer(win, NULL);
+    SDL_Renderer *ren = SDL_CreateRenderer(win, renderer_name_len > 0 ? renderer_name : NULL);
     if (!ren) {
         RETURN_FALSE;
     }
     RETURN_RES(zend_register_resource(ren, le_sdl_renderer));
+}
+
+PHP_FUNCTION(sdl_get_num_render_drivers) {
+    int num = SDL_GetNumRenderDrivers();
+    RETURN_LONG(num);
+}
+
+PHP_FUNCTION(sdl_get_render_driver) {
+    zend_long index;
+
+    if (zend_parse_parameters(ZEND_NUM_ARGS(), "l", &index) == FAILURE) {
+        RETURN_THROWS();
+    }
+
+    const char *name = SDL_GetRenderDriver((int)index);
+    if (!name) {
+        RETURN_FALSE;
+    }
+    RETURN_STRING(name);
 }
 
 PHP_FUNCTION(sdl_set_render_draw_color) {
@@ -644,7 +665,7 @@ PHP_FUNCTION(tray_exit)
         RETURN_THROWS();
     }
 
-    ////tray_exit();
+    tray_exit();
     RETURN_TRUE;
 }
 
@@ -1305,6 +1326,14 @@ ZEND_END_ARG_INFO()
 
 ZEND_BEGIN_ARG_INFO_EX(arginfo_sdl_create_renderer, 0, 0, 1)
     ZEND_ARG_INFO(0, window)
+    ZEND_ARG_INFO(0, renderer_name)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(arginfo_sdl_get_num_render_drivers, 0, 0, 0)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(arginfo_sdl_get_render_driver, 0, 0, 1)
+    ZEND_ARG_INFO(0, index)
 ZEND_END_ARG_INFO()
 
 ZEND_BEGIN_ARG_INFO_EX(arginfo_sdl_set_render_draw_color, 0, 0, 5)
@@ -1508,6 +1537,8 @@ const zend_function_entry sdl3_functions[] = {
     PHP_FE(sdl_destroy_renderer, arginfo_sdl_destroy_renderer)
     PHP_FE(sdl_get_window_id, arginfo_sdl_get_window_id)
     PHP_FE(sdl_create_renderer, arginfo_sdl_create_renderer)
+    PHP_FE(sdl_get_num_render_drivers, arginfo_sdl_get_num_render_drivers)
+    PHP_FE(sdl_get_render_driver, arginfo_sdl_get_render_driver)
     PHP_FE(sdl_set_render_draw_color, arginfo_sdl_set_render_draw_color)
     PHP_FE(sdl_render_clear, arginfo_sdl_render_clear)
     PHP_FE(sdl_render_fill_rect, arginfo_sdl_render_fill_rect)
