@@ -645,7 +645,7 @@ PHP_FUNCTION(tray_poll)
         RETURN_THROWS();
     }
 
-    int res = tray_loop(blocking ? 1 : 0);
+    int res = -1;// tray_loop(blocking ? 1 : 0);
     if (res < 0) {
         RETURN_FALSE;
     }
