@@ -1,2 +1,0 @@
-helper.lo: /home/thomas/projekte/phpnative/framework/php-sdl3/helper.c \
- /home/thomas/projekte/phpnative/framework/php-sdl3/helper.h
