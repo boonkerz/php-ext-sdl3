@@ -14,7 +14,7 @@ library_names='sdl3.so sdl3.so sdl3.so'
 old_library=''
 
 # Libraries that this one depends upon.
-dependency_libs=' -L/usr/local/lib -lSDL3_image -lSDL3_ttf -lSDL3 -latomic -lsysprof-capture-4 -lpcre2-8 -lgraphite2 -lfreetype -lbz2 -lpng16 -lm -lbrotlidec -lbrotlicommon -lnotify -lappindicator3 -ldbusmenu-glib -lgtk-3 -lgdk-3 -lz -lpangocairo-1.0 -lpango-1.0 -lharfbuzz -latk-1.0 -lcairo-gobject -lcairo -lgdk_pixbuf-2.0 -lgio-2.0 -lgobject-2.0 -lglib-2.0'
+dependency_libs=' -L/usr/local/lib -lSDL3_image -lSDL3_ttf -lSDL3 -lharfbuzz -latomic -lsysprof-capture-4 -lpcre2-8 -lgraphite2 -lfreetype -lbz2 -lpng16 -lm -lz -lbrotlidec -lbrotlicommon -lnotify -lgdk_pixbuf-2.0 -lgio-2.0 -lgobject-2.0 -lglib-2.0'
 
 # Version information for sdl3.
 current=0

@@ -87,14 +87,7 @@ if test "$PHP_SDL3" != "no"; then
     AC_MSG_WARN([libnotify not found via pkg-config, desktop_notify() will be disabled])
   ])
 
-  dnl Optional AppIndicator support for tray (Linux)
-  PKG_CHECK_MODULES([APPINDICATOR], [appindicator3-0.1], [
-    AC_DEFINE([HAVE_TRAY_APPINDICATOR], [1], [Enable tray AppIndicator backend])
-    CFLAGS="$CFLAGS $APPINDICATOR_CFLAGS"
-    LDFLAGS="$LDFLAGS $APPINDICATOR_LIBS"
-  ], [
-    AC_MSG_WARN([appindicator3-0.1 not found, tray AppIndicator backend will be disabled])
-  ])
+  dnl SDL3 includes native tray support, no external dependencies needed
 
   SDL_SOURCE_FILES="sdl3.c helper.c sdl3_image.c sdl3_ttf.c sdl3_events.c"
 

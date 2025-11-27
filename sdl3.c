@@ -17,16 +17,8 @@
 #include <libnotify/notify.h>
 #endif
 
-// Cross-platform tray support (zserge/tray)
-#ifdef _WIN32
-#define TRAY_WINAPI
-#elif defined(__APPLE__)
-#define TRAY_APPKIT
-#elif defined(HAVE_TRAY_APPINDICATOR)
-#define TRAY_APPINDICATOR
-#endif
-
-#include "tray-lib/tray.h"
+// SDL3 native tray support
+#include <SDL3/SDL_tray.h>
 
 // Resource handles (nicht static, damit sie in anderen Modulen verfügbar sind)
 int le_sdl_window;
@@ -58,23 +50,21 @@ static void sdl_texture_dtor(zend_resource *rsrc) {
 }
 
 // --- Tray integration state ---
-static struct tray g_tray;
-static struct tray_menu *g_tray_menu = NULL;
-static int g_tray_menu_count = 0;
+// SDL3 Tray globals
+static SDL_Tray *g_sdl_tray = NULL;
+static SDL_TrayMenu *g_sdl_tray_menu = NULL;
+static SDL_TrayEntry **g_sdl_tray_entries = NULL;
+static int g_sdl_tray_entry_count = 0;
 static int g_tray_last_index = -1;
 static int g_tray_last_clicked = 0;
 
-static void php_tray_menu_cb(struct tray_menu *m) {
-    if (!m || m->context == NULL) {
+static void SDLCALL php_tray_callback(void *userdata, SDL_TrayEntry *entry) {
+    if (!userdata) {
         return;
     }
-    intptr_t idx = (intptr_t)m->context;
+    intptr_t idx = (intptr_t)userdata;
     g_tray_last_index = (int)idx;
     g_tray_last_clicked = 1;
-
-    // Signal the native tray loop to exit; tray_poll()
-    // will then see a negative result and return false.
-    //tray_exit();
 }
 
 PHP_MINIT_FUNCTION(sdl3) {
@@ -584,26 +574,62 @@ PHP_FUNCTION(sdl_set_texture_alpha_mod) {
 
 PHP_FUNCTION(tray_setup)
 {
-    char *icon;
+    char *icon_path;
     size_t icon_len;
     zval *menu_arr = NULL;
 
-    if (zend_parse_parameters(ZEND_NUM_ARGS(), "s|a", &icon, &icon_len, &menu_arr) == FAILURE) {
+    if (zend_parse_parameters(ZEND_NUM_ARGS(), "s|a", &icon_path, &icon_len, &menu_arr) == FAILURE) {
         RETURN_THROWS();
     }
 
-    memset(&g_tray, 0, sizeof(g_tray));
-    g_tray.icon = estrdup(icon);
+    // Clean up existing tray if any
+    if (g_sdl_tray) {
+        SDL_DestroyTray(g_sdl_tray);
+        g_sdl_tray = NULL;
+        g_sdl_tray_menu = NULL;
+    }
+    if (g_sdl_tray_entries) {
+        efree(g_sdl_tray_entries);
+        g_sdl_tray_entries = NULL;
+        g_sdl_tray_entry_count = 0;
+    }
 
-    g_tray_menu = NULL;
-    g_tray_menu_count = 0;
+    // Load icon if provided (optional)
+    SDL_Surface *icon_surface = NULL;
+    if (icon_len > 0) {
+        icon_surface = SDL_LoadBMP(icon_path);
+        // Icon can be NULL, SDL will handle it
+    }
 
+    // Create SDL3 tray
+    g_sdl_tray = SDL_CreateTray(icon_surface, "PHP SDL3 Tray");
+
+    if (icon_surface) {
+        SDL_DestroySurface(icon_surface);
+    }
+
+    if (!g_sdl_tray) {
+        php_error_docref(NULL, E_WARNING, "Failed to create tray: %s", SDL_GetError());
+        RETURN_FALSE;
+    }
+
+    // Create tray menu
+    g_sdl_tray_menu = SDL_CreateTrayMenu(g_sdl_tray);
+    if (!g_sdl_tray_menu) {
+        SDL_DestroyTray(g_sdl_tray);
+        g_sdl_tray = NULL;
+        php_error_docref(NULL, E_WARNING, "Failed to create tray menu: %s", SDL_GetError());
+        RETURN_FALSE;
+    }
+
+    // Add menu items if provided
     if (menu_arr && Z_TYPE_P(menu_arr) == IS_ARRAY) {
         HashTable *ht = Z_ARRVAL_P(menu_arr);
         int count = zend_hash_num_elements(ht);
+
         if (count > 0) {
-            g_tray_menu = ecalloc(count + 1, sizeof(struct tray_menu));
-            g_tray_menu_count = count;
+            g_sdl_tray_entries = ecalloc(count, sizeof(SDL_TrayEntry *));
+            g_sdl_tray_entry_count = count;
 
             int idx = 0;
             zval *val;
@@ -611,26 +637,29 @@ PHP_FUNCTION(tray_setup)
                 if (idx >= count) {
                     break;
                 }
-                struct tray_menu *m = &g_tray_menu[idx];
+
+                const char *label = NULL;
                 if (Z_TYPE_P(val) == IS_STRING) {
-                    m->text = estrdup(Z_STRVAL_P(val));
-                } else {
-                    m->text = estrdup("-");
+                    label = Z_STRVAL_P(val);
                 }
-                m->disabled = 0;
-                m->checked = 0;
-                m->cb = php_tray_menu_cb;
-                m->context = (void *)(intptr_t)idx;
-                m->submenu = NULL;
+
+                // Create entry (NULL label creates separator)
+                SDL_TrayEntry *entry = SDL_InsertTrayEntryAt(
+                    g_sdl_tray_menu,
+                    -1,
+                    label,
+                    SDL_TRAYENTRY_BUTTON
+                );
+
+                if (entry && label) {
+                    // Set callback with index as userdata
+                    SDL_SetTrayEntryCallback(entry, php_tray_callback, (void *)(intptr_t)idx);
+                }
+
+                g_sdl_tray_entries[idx] = entry;
                 idx++;
             } ZEND_HASH_FOREACH_END();
-
-            g_tray.menu = g_tray_menu;
         }
-    }
-
-    if (tray_init(&g_tray) != 0) {
-        RETURN_FALSE;
     }
 
     g_tray_last_index = -1;
@@ -645,11 +674,13 @@ PHP_FUNCTION(tray_poll)
         RETURN_THROWS();
     }
 
-    int res = -1;// tray_loop(blocking ? 1 : 0);
-    if (res < 0) {
-        RETURN_FALSE;
+    // SDL3's tray is event-driven, no need for polling loop
+    // Just call SDL_UpdateTrays() to process tray events
+    if (g_sdl_tray) {
+        SDL_UpdateTrays();
     }
 
+    // Check if a tray entry was clicked
     if (g_tray_last_clicked) {
         int idx = g_tray_last_index;
         g_tray_last_clicked = 0;
@@ -665,7 +696,21 @@ PHP_FUNCTION(tray_exit)
         RETURN_THROWS();
     }
 
-//    tray_exit();
+    if (g_sdl_tray) {
+        SDL_DestroyTray(g_sdl_tray);
+        g_sdl_tray = NULL;
+        g_sdl_tray_menu = NULL;
+    }
+
+    if (g_sdl_tray_entries) {
+        efree(g_sdl_tray_entries);
+        g_sdl_tray_entries = NULL;
+        g_sdl_tray_entry_count = 0;
+    }
+
+    g_tray_last_index = -1;
+    g_tray_last_clicked = 0;
+
     RETURN_TRUE;
 }
 
